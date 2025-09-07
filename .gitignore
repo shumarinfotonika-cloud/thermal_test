@@ -1,0 +1,8 @@
+/build/
+/output/*.vtk
+*.o
+*.log
+/conf/*.local.conf
+/docs/html/
+/docs/latex/
+.DS_Store
