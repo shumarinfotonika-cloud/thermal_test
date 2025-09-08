@@ -1,5 +1,6 @@
 #include <iostream>
 #include "ConfigReader.h"
+#include "Grid.h"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -57,7 +58,10 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        Grid grid(nx, ny, spacing_x, spacing_y);
 
+        grid.initialize(20.0);
+        grid.print();
         // solver
 
     } catch (const std::exception& e) {
