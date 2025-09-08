@@ -30,7 +30,7 @@ void Grid::set_value(int x, int y, double value) {
 }
 
 void Grid::print() const {
-    for (int y = 0; y < size_y; ++y) {
+    for (int y = size_y - 1; y >= 0; --y) {
         for (int x = 0; x < size_x; ++x) {
             std::cout << std::setw(8) << data[y][x] << " ";
         }

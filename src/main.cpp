@@ -1,6 +1,7 @@
 #include <iostream>
 #include "ConfigReader.h"
 #include "Grid.h"
+#include "BoundaryConditions.h"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -25,6 +26,9 @@ int main(int argc, char* argv[]) {
         auto [origin_x, origin_y] = config.getPairDouble("grid", "origin", ',');
         auto [spacing_x, spacing_y] = config.getPairDouble("grid", "spacing", ',');
 
+        Grid grid(nx, ny, spacing_x, spacing_y);
+        grid.initialize(20.0);
+
         if (verbose) {
             std::cout << "Grid size: " << nx << "x" << ny << "\n";
             std::cout << "Origin: (" << origin_x << ", " << origin_y << ")\n";
@@ -32,14 +36,22 @@ int main(int argc, char* argv[]) {
         }
 
         auto boundaries = config.getSubsections("boundary_conditions.boundary");
-        if (verbose) {
-            std::cout << "Boundary conditions:\n";
-            for (const auto& boundary : boundaries) {
-                int axis = std::stoi(boundary.at("axis"));
-                int side = std::stoi(boundary.at("side"));
-                double value = std::stod(boundary.at("value"));
+        std::vector<BoundaryCondition> boundary_conditions;
+
+        for (const auto& boundary : boundaries) {
+            int axis = std::stoi(boundary.at("axis"));
+            int side = std::stoi(boundary.at("side"));
+            double value = std::stod(boundary.at("value"));
+
+            boundary_conditions.emplace_back(axis, side, value);
+
+            if (verbose) {
                 std::cout << "Axis: " << axis << ", Side: " << side << ", Value: " << value << "\n";
             }
+        }
+
+        for (const auto& bc : boundary_conditions) {
+            bc.apply(grid);
         }
 
         auto savers = config.getSubsections("savers.saver");
@@ -58,10 +70,10 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        Grid grid(nx, ny, spacing_x, spacing_y);
-
-        grid.initialize(20.0);
-        grid.print();
+        if (verbose) {
+            std::cout << "\nGrid after applying boundary conditions:\n";
+            grid.print();
+        }
         // solver
 
     } catch (const std::exception& e) {
