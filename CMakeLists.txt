@@ -5,6 +5,13 @@ project(ThermalProject)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_executable(thermal src/main.cpp src/ConfigReader.cpp src/Grid.cpp src/BoundaryConditions.cpp)
+add_executable(thermal src/main.cpp src/ConfigReader.cpp src/Grid.cpp src/BoundaryConditions.cpp src/ParserConst.cpp)
 
 target_include_directories(thermal PRIVATE include)
+
+set(MUPARSER_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/parsers/muparser/include)
+set(MUPARSER_LIB_DIR ${CMAKE_SOURCE_DIR}/parsers/muparser/lib)
+
+target_include_directories(thermal PRIVATE ${MUPARSER_INCLUDE_DIR})
+
+target_link_libraries(thermal PRIVATE ${MUPARSER_LIB_DIR}/libmuparser.so)

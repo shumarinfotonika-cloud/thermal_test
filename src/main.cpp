@@ -2,6 +2,9 @@
 #include "ConfigReader.h"
 #include "Grid.h"
 #include "BoundaryConditions.h"
+#include "ParserConst.h"
+
+#include "muParser.h"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -74,6 +77,7 @@ int main(int argc, char* argv[]) {
             std::cout << "\nGrid after applying boundary conditions:\n";
             grid.print();
         }
+
         // solver
 
     } catch (const std::exception& e) {
