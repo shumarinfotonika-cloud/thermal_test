@@ -1,18 +1,27 @@
 #ifndef BOUNDARY_CONDITION_H
 #define BOUNDARY_CONDITION_H
 
+#include <string>
 #include "Grid.h"
+
+#include "muParser.h"
 
 class BoundaryCondition {
 private:
     int axis; // 0 — x, 1 — y
     int side; //  0 — left, 1 — right
-    double value;
+    std::string value;
+    double x;
+    double y;
+    mu::Parser parser;
 
 public:
-    BoundaryCondition(int axis, int side, double value);
+    BoundaryCondition(int axis, int side, const std::string &value);
 
-    void apply(Grid& grid) const;
+    void set_x(double new_x) {x = new_x;}
+    void set_y(double new_y) {y = new_y;}
+
+    void apply(Grid& grid);
 };
 
 #endif // BOUNDARY_CONDITION_H

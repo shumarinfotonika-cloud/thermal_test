@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
         for (const auto& boundary : boundaries) {
             int axis = std::stoi(boundary.at("axis"));
             int side = std::stoi(boundary.at("side"));
-            double value = std::stod(boundary.at("value"));
+            std::string value = boundary.at("value");
 
             boundary_conditions.emplace_back(axis, side, value);
 
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        for (const auto& bc : boundary_conditions) {
+        for (auto& bc : boundary_conditions) {
             bc.apply(grid);
         }
 
