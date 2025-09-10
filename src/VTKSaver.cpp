@@ -27,7 +27,7 @@ void VTKSaver::saveTemperature(const std::string &filename) {
     file << "SCALARS temperature double\n";
     file << "LOOKUP_TABLE default\n";
 
-    for (int j = size_y - 1; j >= 0; --j) {
+    for (int j = 0; j < size_y; ++j) {
         for (int i = 0; i < size_x; ++i) {
             file << grid.get_value(i, j) << " ";
         }

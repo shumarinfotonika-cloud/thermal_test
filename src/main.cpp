@@ -4,6 +4,7 @@
 #include "BoundaryConditions.h"
 #include "ParserConst.h"
 #include "VTKSaver.h"
+#include "TempSaver.h"
 #include "ThermalConductivity.h"
 #include "SourceFunction.h"
 #include "Solver.h"
@@ -83,27 +84,38 @@ int main(int argc, char* argv[]) {
         }
 
         bool vtk_saver_active = false;
+        bool txt_saver_active = false;
         std::string vtk_path;
-        int save_frequency = 1;
+        std::string txt_path;
+        int save_vtk_frequency = 1;
+        int save_txt_frequency = 1;
 
         for (const auto& saver : savers) {
             if (saver.at("name") == "VTKSaver") {
                 vtk_saver_active = true;
                 vtk_path = saver.at("path");
-                save_frequency = std::stoi(saver.at("save"));
-                break;
+                save_vtk_frequency = std::stoi(saver.at("save"));
+            }
+            if (saver.at("name") == "TempSaver") {
+                txt_saver_active = true;
+                txt_path = saver.at("path");
+                save_txt_frequency = std::stoi(saver.at("save"));
             }
         }
 
         if (vtk_saver_active && verbose) {
-            std::cout << "VTKSaver is active. Path: " << vtk_path << ", Save frequency: " << save_frequency << "\n";
+            std::cout << "VTKSaver is active. Path: " << vtk_path << ", Save frequency: " << save_vtk_frequency << "\n";
+        }
+
+        if (txt_saver_active && verbose) {
+            std::cout << "TempSaver is active. Path: " << txt_path << ", Save frequency: " << save_txt_frequency << "\n";
         }
 
         VTKSaver vtk_saver(grid);
+        TempSaver txt_saver(grid);
 
         for (int t = 0; t < steps; ++t) {
-            solver.solve_one_step(t);
-            if (vtk_saver_active && (t % save_frequency == 0)) {
+            if (vtk_saver_active && (t % save_vtk_frequency == 0)) {
                 std::string new_path = ConfigReader::replacePlaceholder(vtk_path, "%g", id);
                 new_path = ConfigReader::replacePlaceholder(new_path, "%s", std::to_string(t));
 
@@ -113,6 +125,17 @@ int main(int argc, char* argv[]) {
                     std::cout << "Step " << t << ": VTK saved to " << new_path << "\n";
                 }
             }
+
+            if (txt_saver_active && (t % save_txt_frequency == 0)) {
+                std::string new_path = ConfigReader::replacePlaceholder(txt_path, "%g", id);
+
+                txt_saver.save_step(t, new_path);
+
+                if (verbose) {
+                    std::cout << "Step " << t << ": Temp saved to " << new_path << "\n";
+                }
+            }
+            solver.solve_one_step(t);
         }
 
 
