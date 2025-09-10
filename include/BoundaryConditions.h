@@ -13,6 +13,7 @@ private:
     std::string value;
     double x;
     double y;
+    double t;
     mu::Parser parser;
 
 public:
@@ -20,8 +21,9 @@ public:
 
     void set_x(double new_x) {x = new_x;}
     void set_y(double new_y) {y = new_y;}
+    void set_t(double new_t) {t = new_t;}
 
-    void apply(Grid& grid);
+    void apply(Grid& grid, double time);
 };
 
 #endif // BOUNDARY_CONDITION_H

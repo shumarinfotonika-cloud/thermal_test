@@ -4,6 +4,9 @@
 #include "BoundaryConditions.h"
 #include "ParserConst.h"
 #include "VTKSaver.h"
+#include "ThermalConductivity.h"
+#include "SourceFunction.h"
+#include "Solver.h"
 
 #include "muParser.h"
 
@@ -55,8 +58,15 @@ int main(int argc, char* argv[]) {
         }
 
         for (auto& bc : boundary_conditions) {
-            bc.apply(grid);
+            bc.apply(grid, 0.0);
         }
+
+        std::string thermal_conductivity = config.getString("material", "thermal_conductivity");
+        std::string source_formula = config.getString("source", "source_formula");
+        ThermalConductivity coeffs(thermal_conductivity);
+        SourceFunction source(source_formula);
+
+        Solver solver(grid, dt, coeffs, source, boundary_conditions);
 
         auto savers = config.getSubsections("savers.saver");
         if (verbose) {
@@ -65,8 +75,6 @@ int main(int argc, char* argv[]) {
                 std::string name = saver.at("name");
                 std::string path = saver.at("path");
                 int save_frequency = std::stoi(saver.at("save"));
-
-                //path = ConfigReader::replacePlaceholder(path, "%g", id);
 
                 std::cout << "Name: " << name << "\n";
                 std::cout << "Path: " << path << "\n";
@@ -94,12 +102,12 @@ int main(int argc, char* argv[]) {
         VTKSaver vtk_saver(grid);
 
         for (int t = 0; t < steps; ++t) {
+            solver.solve_one_step(t);
             if (vtk_saver_active && (t % save_frequency == 0)) {
                 std::string new_path = ConfigReader::replacePlaceholder(vtk_path, "%g", id);
                 new_path = ConfigReader::replacePlaceholder(new_path, "%s", std::to_string(t));
 
                 vtk_saver.saveTemperature(new_path);
-                grid.set_value(2, 2, t);
 
                 if (verbose) {
                     std::cout << "Step " << t << ": VTK saved to " << new_path << "\n";
@@ -108,10 +116,10 @@ int main(int argc, char* argv[]) {
         }
 
 
-        if (verbose) {
-            std::cout << "\nGrid after applying boundary conditions:\n";
-            grid.print();
-        }
+        // if (verbose) {
+        //     std::cout << "\nGrid after applying boundary conditions:\n";
+        //     grid.print();
+        // }
 
         // solver
 

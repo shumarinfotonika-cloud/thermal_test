@@ -8,6 +8,7 @@ BoundaryCondition::BoundaryCondition(int axis, int side, const std::string &valu
 
         parser.DefineVar("x", &x);
         parser.DefineVar("y", &y);
+        parser.DefineVar("t", &t);
 
         try {
             parser.SetExpr(value);
@@ -17,11 +18,12 @@ BoundaryCondition::BoundaryCondition(int axis, int side, const std::string &valu
         }
     }
 
-void BoundaryCondition::apply(Grid &grid) {
+void BoundaryCondition::apply(Grid &grid, double time) {
     int size_x = grid.get_size_x();
     int size_y = grid.get_size_y();
     double spacing_x = grid.get_spacing_x();
     double spacing_y = grid.get_spacing_y();
+    set_t(time);
 
     if (axis == 0) {
         int x_index;
@@ -39,6 +41,7 @@ void BoundaryCondition::apply(Grid &grid) {
             try {
                 parser.DefineVar("x", &x);
                 parser.DefineVar("y", &y);
+                parser.DefineVar("t", &t);
                 double current_value = parser.Eval();
                 grid.set_value(x_index, j, current_value);
             } catch (mu::Parser::exception_type &e) {
@@ -63,6 +66,7 @@ void BoundaryCondition::apply(Grid &grid) {
             try {
                 parser.DefineVar("x", &x);
                 parser.DefineVar("y", &y);
+                parser.DefineVar("t", &t);
                 double current_value = parser.Eval();
                 grid.set_value(i, y_index, current_value);
             } catch (mu::Parser::exception_type &e) {
