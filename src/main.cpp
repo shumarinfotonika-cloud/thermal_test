@@ -3,6 +3,7 @@
 #include "Grid.h"
 #include "BoundaryConditions.h"
 #include "ParserConst.h"
+#include "VTKSaver.h"
 
 #include "muParser.h"
 
@@ -65,13 +66,47 @@ int main(int argc, char* argv[]) {
                 std::string path = saver.at("path");
                 int save_frequency = std::stoi(saver.at("save"));
 
-                path = ConfigReader::replacePlaceholder(path, "%g", id);
+                //path = ConfigReader::replacePlaceholder(path, "%g", id);
 
                 std::cout << "Name: " << name << "\n";
                 std::cout << "Path: " << path << "\n";
                 std::cout << "Save frequency: " << save_frequency << "\n";
             }
         }
+
+        bool vtk_saver_active = false;
+        std::string vtk_path;
+        int save_frequency = 1;
+
+        for (const auto& saver : savers) {
+            if (saver.at("name") == "VTKSaver") {
+                vtk_saver_active = true;
+                vtk_path = saver.at("path");
+                save_frequency = std::stoi(saver.at("save"));
+                break;
+            }
+        }
+
+        if (vtk_saver_active && verbose) {
+            std::cout << "VTKSaver is active. Path: " << vtk_path << ", Save frequency: " << save_frequency << "\n";
+        }
+
+        VTKSaver vtk_saver(grid);
+
+        for (int t = 0; t < steps; ++t) {
+            if (vtk_saver_active && (t % save_frequency == 0)) {
+                std::string new_path = ConfigReader::replacePlaceholder(vtk_path, "%g", id);
+                new_path = ConfigReader::replacePlaceholder(new_path, "%s", std::to_string(t));
+
+                vtk_saver.saveTemperature(new_path);
+                grid.set_value(2, 2, t);
+
+                if (verbose) {
+                    std::cout << "Step " << t << ": VTK saved to " << new_path << "\n";
+                }
+            }
+        }
+
 
         if (verbose) {
             std::cout << "\nGrid after applying boundary conditions:\n";
