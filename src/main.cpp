@@ -25,23 +25,12 @@ int main(int argc, char* argv[]) {
         double dt = config.getDouble("", "dt");
         int steps = config.getInt("", "steps");
 
-        if (verbose) {
-            std::cout << "Starting simulation with ID: " << id << "\n";
-            std::cout << "Time step: " << dt << ", Number of steps: " << steps << "\n";
-        }
-
         auto [nx, ny] = config.getPairInt("grid", "size", ',');
-        auto [origin_x, origin_y] = config.getPairDouble("grid", "origin", ',');
         auto [spacing_x, spacing_y] = config.getPairDouble("grid", "spacing", ',');
+        double initial_value = config.getDouble("grid", "initial_value");
 
         Grid grid(nx, ny, spacing_x, spacing_y);
-        grid.initialize(20.0);
-
-        if (verbose) {
-            std::cout << "Grid size: " << nx << "x" << ny << "\n";
-            std::cout << "Origin: (" << origin_x << ", " << origin_y << ")\n";
-            std::cout << "Spacing: (" << spacing_x << ", " << spacing_y << ")\n";
-        }
+        grid.initialize(initial_value);
 
         auto boundaries = config.getSubsections("boundary_conditions.boundary");
         std::vector<BoundaryCondition> boundary_conditions;
@@ -52,10 +41,6 @@ int main(int argc, char* argv[]) {
             std::string value = boundary.at("value");
 
             boundary_conditions.emplace_back(axis, side, value);
-
-            if (verbose) {
-                std::cout << "Axis: " << axis << ", Side: " << side << ", Value: " << value << "\n";
-            }
         }
 
         for (auto& bc : boundary_conditions) {
@@ -70,18 +55,6 @@ int main(int argc, char* argv[]) {
         Solver solver(grid, dt, coeffs, source, boundary_conditions);
 
         auto savers = config.getSubsections("savers.saver");
-        if (verbose) {
-            std::cout << "Savers:\n";
-            for (const auto& saver : savers) {
-                std::string name = saver.at("name");
-                std::string path = saver.at("path");
-                int save_frequency = std::stoi(saver.at("save"));
-
-                std::cout << "Name: " << name << "\n";
-                std::cout << "Path: " << path << "\n";
-                std::cout << "Save frequency: " << save_frequency << "\n";
-            }
-        }
 
         bool vtk_saver_active = false;
         bool txt_saver_active = false;
@@ -89,6 +62,9 @@ int main(int argc, char* argv[]) {
         std::string txt_path;
         int save_vtk_frequency = 1;
         int save_txt_frequency = 1;
+
+        VTKSaver vtk_saver(grid);
+        TempSaver txt_saver(grid);
 
         for (const auto& saver : savers) {
             if (saver.at("name") == "VTKSaver") {
@@ -103,23 +79,49 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        if (vtk_saver_active && verbose) {
-            std::cout << "VTKSaver is active. Path: " << vtk_path << ", Save frequency: " << save_vtk_frequency << "\n";
-        }
+        if (verbose) {
+            std::cout << "\nStarting simulation with ID: " << id << "\n\n";
 
-        if (txt_saver_active && verbose) {
-            std::cout << "TempSaver is active. Path: " << txt_path << ", Save frequency: " << save_txt_frequency << "\n";
-        }
+            std::cout << "\t[Time]\n";
+            std::cout << "\t  Number of steps: " << steps << "\n";
+            std::cout << "\t  Step: " << dt << "\n";
 
-        VTKSaver vtk_saver(grid);
-        TempSaver txt_saver(grid);
+            std::cout << "\t[Grid]\n";
+            std::cout << "\t  Size: " << nx << "x" << ny << "\n";
+            std::cout << "\t  Spacing: (" << spacing_x << ", " << spacing_y << ")\n";
+            std::cout << "\t  Initial value: " << initial_value << "\n";
+
+            std::cout << "\t[Boundary conditions]\n";
+            for (const auto& boundary : boundaries) {
+                int axis = std::stoi(boundary.at("axis"));
+                int side = std::stoi(boundary.at("side"));
+                std::string value = boundary.at("value");
+
+                std::cout << "\t  Axis: " << axis << ", Side: " << side << ", Value: " << value << "\n";
+            }
+
+            std::cout << "\t[Savers]\n";
+            for (const auto& saver : savers) {
+                std::string name = saver.at("name");
+                std::string path = saver.at("path");
+                int save_frequency = std::stoi(saver.at("save"));
+
+                if (saver.at("name") == "VTKSaver") {
+                    std::cout << "\t  VTKSaver is active. Path: " << vtk_path << ", Save frequency: " << save_vtk_frequency << "\n";
+                }
+                if (saver.at("name") == "TempSaver") {
+                    std::cout << "\t  TempSaver is active. Path: " << txt_path << ", Save frequency: " << save_txt_frequency << "\n";
+                }
+            }
+            std::cout << "\n";
+        }
 
         for (int t = 0; t < steps; ++t) {
             if (vtk_saver_active && (t % save_vtk_frequency == 0)) {
                 std::string new_path = ConfigReader::replacePlaceholder(vtk_path, "%g", id);
                 new_path = ConfigReader::replacePlaceholder(new_path, "%s", std::to_string(t));
 
-                vtk_saver.saveTemperature(new_path);
+                vtk_saver.saveTemperature("../" + new_path);
 
                 if (verbose) {
                     std::cout << "Step " << t << ": VTK saved to " << new_path << "\n";
@@ -129,7 +131,7 @@ int main(int argc, char* argv[]) {
             if (txt_saver_active && (t % save_txt_frequency == 0)) {
                 std::string new_path = ConfigReader::replacePlaceholder(txt_path, "%g", id);
 
-                txt_saver.save_step(t, new_path);
+                txt_saver.save_step(t, "../" + new_path);
 
                 if (verbose) {
                     std::cout << "Step " << t << ": Temp saved to " << new_path << "\n";
@@ -137,15 +139,9 @@ int main(int argc, char* argv[]) {
             }
             solver.solve_one_step(t);
         }
-
-
-        // if (verbose) {
-        //     std::cout << "\nGrid after applying boundary conditions:\n";
-        //     grid.print();
-        // }
-
-        // solver
-
+        if (verbose) {
+            std::cout << "\nSimulation with ID " << id << " was completed successfully\n\n";
+        }
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
         return 1;
