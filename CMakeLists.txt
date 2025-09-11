@@ -5,7 +5,20 @@ project(ThermalProject)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_executable(thermal src/main.cpp src/ConfigReader.cpp src/Grid.cpp src/BoundaryConditions.cpp src/ParserConst.cpp src/VTKSaver.cpp src/SourceFunction.cpp src/ThermalConductivity.cpp src/Solver.cpp src/TempSaver.cpp)
+set(SOURCES
+    src/main.cpp
+    src/ConfigReader.cpp
+    src/DirectSolver.cpp
+    src/Grid.cpp
+    src/BoundaryConditions.cpp
+    src/ParserConst.cpp
+    src/VTKSaver.cpp
+    src/SourceFunction.cpp
+    src/ThermalConductivity.cpp
+    src/Solver.cpp
+    src/TempSaver.cpp)
+
+add_executable(thermal ${SOURCES})
 
 target_include_directories(thermal PRIVATE include)
 
