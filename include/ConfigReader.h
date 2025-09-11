@@ -9,6 +9,7 @@
 class ConfigReader {
 public:
     ConfigReader(const std::string& config_file);
+    bool hasSection(const std::string& section) const;
     std::string getString(const std::string& section, const std::string& key) const;
     double getDouble(const std::string& section, const std::string& key) const;
     int getInt(const std::string& section, const std::string& key) const;

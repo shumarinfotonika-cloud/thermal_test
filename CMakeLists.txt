@@ -9,6 +9,7 @@ set(SOURCES
     src/main.cpp
     src/ConfigReader.cpp
     src/DirectSolver.cpp
+    src/InverseSolver.cpp
     src/Grid.cpp
     src/BoundaryConditions.cpp
     src/ParserConst.cpp

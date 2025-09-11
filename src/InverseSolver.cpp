@@ -1,52 +1,55 @@
+#include "InverseSolver.h"
 #include "DirectSolver.h"
 #include "Grid.h"
 #include "BoundaryConditions.h"
-#include "ThermalConductivity.h"
 #include "SourceFunction.h"
 #include "Solver.h"
 #include "VTKSaver.h"
 #include "TempSaver.h"
 #include <iostream>
 
-DirectSolver::DirectSolver(const ConfigReader& config)
-    : config(config), coeffs(config.getString("material", "thermal_conductivity")) {}
+InverseSolver::InverseSolver(const ConfigReader& config)
+    : config(config) {}
 
-DirectSolver::DirectSolver(const ConfigReader& config, const ThermalConductivity& new_coeffs)
-    : config(config), coeffs(new_coeffs) {}
-
-void DirectSolver::solve() {
+void InverseSolver::solve() {
 
     bool verbose = config.getString("", "verbose") == "true";
     std::string id = config.getString("", "id");
     double dt = config.getDouble("", "dt");
     int steps = config.getInt("", "steps");
 
+    std::string solution_path = config.getString("solution", "path");
+
+    int iterations = config.getInt("optimization", "iterations");
+    double error_rate = config.getDouble("optimization", "error_rate");
+    double learning_rate = config.getDouble("optimization", "learning_rate");
+
     auto [nx, ny] = config.getPairInt("grid", "size", ',');
     auto [spacing_x, spacing_y] = config.getPairDouble("grid", "spacing", ',');
     double initial_value = config.getDouble("grid", "initial_value");
 
-    Grid grid(nx, ny, spacing_x, spacing_y);
-    grid.initialize(initial_value);
+    // Grid grid(nx, ny, spacing_x, spacing_y);
+    // grid.initialize(initial_value);
 
     auto boundaries = config.getSubsections("boundary_conditions.boundary");
-    std::vector<BoundaryCondition> boundary_conditions;
+    // std::vector<BoundaryCondition> boundary_conditions;
 
     for (const auto& boundary : boundaries) {
         int axis = std::stoi(boundary.at("axis"));
         int side = std::stoi(boundary.at("side"));
         std::string value = boundary.at("value");
 
-        boundary_conditions.emplace_back(axis, side, value);
+        // boundary_conditions.emplace_back(axis, side, value);
     }
 
-    for (auto& bc : boundary_conditions) {
-        bc.apply(grid, 0.0);
-    }
+    // for (auto& bc : boundary_conditions) {
+    //     bc.apply(grid, 0.0);
+    // }
 
     std::string source_formula = config.getString("source", "source_formula");
     SourceFunction source(source_formula);
 
-    Solver solver(grid, dt, coeffs, source, boundary_conditions);
+    // Solver solver(grid, dt, coeffs, source, boundary_conditions);
 
     auto savers = config.getSubsections("savers.saver");
 
@@ -57,8 +60,8 @@ void DirectSolver::solve() {
     int save_vtk_frequency = 1;
     int save_txt_frequency = 1;
 
-    VTKSaver vtk_saver(grid);
-    TempSaver txt_saver(grid);
+    // VTKSaver vtk_saver(grid);
+    // TempSaver txt_saver(grid);
 
     for (const auto& saver : savers) {
         if (saver.at("name") == "VTKSaver") {
@@ -74,7 +77,16 @@ void DirectSolver::solve() {
     }
 
     if (verbose) {
-        std::cout << "\nStarting simulation with ID: " << id << "\n\n";
+        std::cout << "\nStarting inverse task with ID: " << id << "\n\n";
+
+        std::cout << "\t[Solution]\n";
+        std::cout << "\t  Path to solution file: " << solution_path << "\n";
+
+        std::cout << "\t[Optimization]\n";
+        std::cout << "\t  Iterations: " << iterations << "\n";
+        std::cout << "\t  Error rate: " << error_rate << "\n";
+        std::cout << "\t  Learning rate: " << learning_rate << "\n";
+
 
         std::cout << "\t[Time]\n";
         std::cout << "\t  Number of steps: " << steps << "\n";
@@ -111,30 +123,7 @@ void DirectSolver::solve() {
         std::cout << "\n";
     }
 
-    for (int t = 0; t < steps; ++t) {
-        if (vtk_saver_active && (t % save_vtk_frequency == 0)) {
-            std::string new_path = ConfigReader::replacePlaceholder(vtk_path, "%g", id);
-            new_path = ConfigReader::replacePlaceholder(new_path, "%s", std::to_string(t));
-
-            vtk_saver.saveTemperature("../" + new_path);
-
-            if (verbose) {
-                std::cout << "Step " << t << ": VTK saved to " << new_path << "\n";
-            }
-        }
-
-        if (txt_saver_active && (t % save_txt_frequency == 0)) {
-            std::string new_path = ConfigReader::replacePlaceholder(txt_path, "%g", id);
-
-            txt_saver.save_step(t, "../" + new_path);
-
-            if (verbose) {
-                std::cout << "Step " << t << ": Temp saved to " << new_path << "\n";
-            }
-        }
-        solver.solve_one_step(t);
-    }
     if (verbose) {
-        std::cout << "\nSimulation with ID " << id << " was completed successfully\n\n";
-    }
+        std::cout << "\nInverse task with ID " << id << " was completed successfully\n\n";
+    } 
 }

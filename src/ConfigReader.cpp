@@ -66,6 +66,9 @@ ConfigReader::ConfigReader(const std::string& config_file) {
     }
 }
 
+bool ConfigReader::hasSection(const std::string& section) const {
+    return sections_.find(section) != sections_.end();
+}
 
 std::string ConfigReader::getString(const std::string& section, const std::string& key) const {
     auto section_it = sections_.find(section);

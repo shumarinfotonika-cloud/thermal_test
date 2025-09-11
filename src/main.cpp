@@ -1,6 +1,7 @@
 #include <iostream>
 #include "ConfigReader.h"
 #include "DirectSolver.h"
+#include "InverseSolver.h"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -17,8 +18,9 @@ int main(int argc, char* argv[]) {
             solver.solve();
 
         } else if (task_type == "inverse") {
+            InverseSolver solver(config);
+            solver.solve();
 
-            
         } else {
             std::cerr << "Unknown task type: " << task_type << "\n";
         }
