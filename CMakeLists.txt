@@ -16,7 +16,8 @@ set(SOURCES
     src/SourceFunction.cpp
     src/ThermalConductivity.cpp
     src/Solver.cpp
-    src/TempSaver.cpp)
+    src/TempSaver.cpp
+    src/ExactSolution.cpp)
 
 add_executable(thermal ${SOURCES})
 
