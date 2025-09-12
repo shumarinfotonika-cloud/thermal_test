@@ -6,6 +6,9 @@
 #include <string>
 #include "Grid.h"
 
+// Класс сохранения в текстовый файл
+// Реализует сохранение решения в текстовый файл
+
 class TempSaver {
 public:
     TempSaver(const Grid& grid);

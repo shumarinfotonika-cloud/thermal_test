@@ -6,6 +6,9 @@
 
 #include "muParser.h"
 
+// Класс граничных условий
+// Считывает переданную формулу через парсер и возвращает значение в заданной точке
+
 class BoundaryCondition {
 private:
     int axis; // 0 — x, 1 — y

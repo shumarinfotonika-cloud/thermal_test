@@ -4,6 +4,9 @@
 #include <string>
 #include "muParser.h"
 
+// Класс функции источника
+// Реализует считывание функции из строки через парсер и возвращает значение этой функции в заданной точке
+
 class SourceFunction {
 private:
     mu::Parser parser;

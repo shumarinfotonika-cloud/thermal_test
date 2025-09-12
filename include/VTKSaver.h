@@ -5,6 +5,10 @@
 #include <vector>
 #include "Grid.h"
 
+// Класс сохранения в формат VTK
+// Реализует сохранение данных с сетки в формат VTK.
+// Крайне удобен для просмотра в ParaView
+
 class VTKSaver {
 public:
     VTKSaver(const Grid &grid);

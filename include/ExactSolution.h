@@ -8,6 +8,9 @@
 #include <sstream>
 #include <stdexcept>
 
+// Класс чтения решения из текстового файла
+// Считывает текстовый файл и создает структуру, хранящую полное решение задачи
+
 class ExactSolution {
 private:
     std::vector<Grid> data;

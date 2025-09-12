@@ -6,6 +6,9 @@
 #include "ThermalConductivity.h"
 #include "SourceFunction.h"
 
+// Класс решения прямой задачи на одном временном шаге
+// Реализует схему с расщеплением на основе книги, полученной из задания
+
 class Solver {
 private:
     Grid& grid;

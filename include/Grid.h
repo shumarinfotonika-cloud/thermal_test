@@ -4,6 +4,9 @@
 #include <vector>
 #include <stdexcept>
 
+// Класс сеток
+// Создает сетку для расчетов по числу точек и шагам. Имеет стандартные методы для работы с сетками
+
 class Grid {
 private:
     int size_x, size_y;

@@ -3,6 +3,9 @@
 
 #include "ConfigReader.h"
 
+// Класс решения обратной задачи
+// Реализует полное решение обратной задачи
+
 class InverseSolver {
 private:
     const ConfigReader& config;

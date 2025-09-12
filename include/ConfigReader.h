@@ -6,6 +6,9 @@
 #include <unordered_map>
 #include <vector>
 
+// Класс обработчика конфигурационных файлов
+// Считывает конфигурационный файл и создает структуру, хранящую все параметры по секциям
+
 class ConfigReader {
 public:
     ConfigReader(const std::string& config_file);

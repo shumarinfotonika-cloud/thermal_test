@@ -17,7 +17,7 @@ ThermalConductivity SingleStepInverseSolver::solve(ThermalConductivity& current_
 
     ThermalConductivity perturbed_coeffs = current_coeffs;
     Grid perturbed_coeffs_g(nx, ny, spacing_x, spacing_y);
-    double delta = 1e-2;
+    double delta = 1e-3;
     double max_a = 0.0;
     double learning_rate_new = learning_rate / (1.0 + iter);
 

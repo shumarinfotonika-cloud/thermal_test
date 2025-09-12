@@ -4,6 +4,10 @@
 #include "ConfigReader.h"
 #include "ThermalConductivity.h"
 
+// Класс прямой задачи
+// Класс реализует полное решение прямой задачи. Адаптирован для стандартной прямой задачи
+// и прямой задачи, решаемой в рамках обратной
+
 class DirectSolver {
 private:
     const ConfigReader& config;

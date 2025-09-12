@@ -8,6 +8,9 @@
 #include "DirectSolver.h"
 #include "ExactSolution.h"
 
+// Класс решения обратной задачи на одной итерации
+// Реализует расчет функционала невязки по методу Тихонова и решает задачу методом градиентного спуска
+
 class SingleStepInverseSolver {
 private:
     const ConfigReader& config;
