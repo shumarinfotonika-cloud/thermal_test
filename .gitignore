@@ -1,6 +1,4 @@
 /build/
-/output/vtk/*.vtk
-/output/txt/*.txt
 *.o
 *.log
 /conf/*.local.conf
