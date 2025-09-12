@@ -19,7 +19,7 @@ void TempSaver::save_step(int time_step, const std::string &filename) {
 
     for (int i = 0; i < size_x; ++i) {
         for (int j = 0; j < size_y; ++j) {
-            file << std::fixed << std::setprecision(6) << grid.get_value(i, j) << " ";
+            file << std::fixed << std::setprecision(12) << grid.get_value(i, j) << " ";
         }
         file << "\n";
     }

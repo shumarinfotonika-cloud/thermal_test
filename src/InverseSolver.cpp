@@ -4,6 +4,7 @@
 #include "BoundaryConditions.h"
 #include "SourceFunction.h"
 #include "Solver.h"
+#include "SingleStepInverseSolver.h"
 #include "VTKSaver.h"
 #include "TempSaver.h"
 #include <iostream>
@@ -23,33 +24,26 @@ void InverseSolver::solve() {
     int iterations = config.getInt("optimization", "iterations");
     double error_rate = config.getDouble("optimization", "error_rate");
     double learning_rate = config.getDouble("optimization", "learning_rate");
+    double lambda = config.getDouble("optimization", "lambda");
+    double initial_coef = config.getDouble("optimization", "initial_coef");
 
     auto [nx, ny] = config.getPairInt("grid", "size", ',');
     auto [spacing_x, spacing_y] = config.getPairDouble("grid", "spacing", ',');
     double initial_value = config.getDouble("grid", "initial_value");
 
-    // Grid grid(nx, ny, spacing_x, spacing_y);
-    // grid.initialize(initial_value);
-
     auto boundaries = config.getSubsections("boundary_conditions.boundary");
-    // std::vector<BoundaryCondition> boundary_conditions;
+    std::vector<BoundaryCondition> boundary_conditions;
 
     for (const auto& boundary : boundaries) {
         int axis = std::stoi(boundary.at("axis"));
         int side = std::stoi(boundary.at("side"));
         std::string value = boundary.at("value");
 
-        // boundary_conditions.emplace_back(axis, side, value);
+        boundary_conditions.emplace_back(axis, side, value);
     }
-
-    // for (auto& bc : boundary_conditions) {
-    //     bc.apply(grid, 0.0);
-    // }
 
     std::string source_formula = config.getString("source", "source_formula");
     SourceFunction source(source_formula);
-
-    // Solver solver(grid, dt, coeffs, source, boundary_conditions);
 
     auto savers = config.getSubsections("savers.saver");
 
@@ -59,9 +53,6 @@ void InverseSolver::solve() {
     std::string txt_path;
     int save_vtk_frequency = 1;
     int save_txt_frequency = 1;
-
-    // VTKSaver vtk_saver(grid);
-    // TempSaver txt_saver(grid);
 
     for (const auto& saver : savers) {
         if (saver.at("name") == "VTKSaver") {
@@ -86,6 +77,7 @@ void InverseSolver::solve() {
         std::cout << "\t  Iterations: " << iterations << "\n";
         std::cout << "\t  Error rate: " << error_rate << "\n";
         std::cout << "\t  Learning rate: " << learning_rate << "\n";
+        std::cout << "\t  Initial coefficient: " << initial_coef << "\n";
 
 
         std::cout << "\t[Time]\n";
@@ -121,6 +113,67 @@ void InverseSolver::solve() {
             }
         }
         std::cout << "\n";
+    }
+
+    ThermalConductivity thermal_conductivity(nx, ny, spacing_x, spacing_y, initial_coef);
+    Grid thermal_conductivity_g = thermal_conductivity.get_grid();
+    VTKSaver vtk_saver(thermal_conductivity_g);
+    TempSaver txt_saver(thermal_conductivity_g);
+
+    SingleStepInverseSolver step_solver(config, source, boundary_conditions, lambda, learning_rate);
+
+    for (int iter = 0; iter < iterations; ++iter) {
+        if (vtk_saver_active && iter % save_vtk_frequency == 0) {
+            std::string new_path = ConfigReader::replacePlaceholder(vtk_path, "%g", id);
+            new_path = ConfigReader::replacePlaceholder(new_path, "%s", std::to_string(iter));
+
+            vtk_saver.saveTemperature("../" + new_path, "temperature");
+
+            if (verbose) {
+                std::cout << "Iteration " << iter + 1 << ": VTK saved to " << new_path << "\n";
+            }
+        }
+        if (txt_saver_active && iter % save_txt_frequency == 0) {
+            if (txt_saver_active && (iter % save_txt_frequency == 0)) {
+            std::string new_path = ConfigReader::replacePlaceholder(txt_path, "%g", id);
+
+            txt_saver.save_step(iter, "../" + new_path);
+
+            if (verbose) {
+                std::cout << "Iteration " << iter + 1 << ": Temp saved to " << new_path << "\n";
+            }
+        }
+        }
+        if (verbose) {
+            std::cout << "Iteration " << iter + 1 << " of " << iterations << "...\n";
+        }
+
+        ThermalConductivity new_thermal_conductivity = step_solver.solve(thermal_conductivity, dt, iter);
+
+        double error = 0.0;
+        for (int i = 0; i < nx; ++i) {
+            for (int j = 0; j < ny; ++j) {
+                double old_coeff = thermal_conductivity.evaluate(i, j, spacing_x, spacing_y, 0.0, 0.0);
+                double new_coeff = new_thermal_conductivity.evaluate(i, j, spacing_x, spacing_y, 0.0, 0.0);
+                error += (new_coeff - old_coeff) * (new_coeff - old_coeff);
+            }
+        }
+        error /= (nx * ny);
+        error = std::sqrt(error);
+        thermal_conductivity_g = new_thermal_conductivity.get_grid();
+
+        if (verbose) {
+            std::cout << "\tError: " << error << "\n";
+        }
+
+        if (error < error_rate) {
+            if (verbose) {
+                std::cout << "Error is below the threshold. Stopping optimization.\n";
+            }
+            break;
+        }
+
+        thermal_conductivity = new_thermal_conductivity;
     }
 
     if (verbose) {

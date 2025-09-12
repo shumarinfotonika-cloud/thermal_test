@@ -17,10 +17,10 @@ ThermalConductivity::ThermalConductivity(const std::string &formula)
     }
 }
 
-ThermalConductivity::ThermalConductivity(int size_x, int size_y, double spacing_x, double spacing_y)
+ThermalConductivity::ThermalConductivity(int size_x, int size_y, double spacing_x, double spacing_y, double init)
     : is_direct(false), is_inverse(true), coefficients_grid(size_x, size_y, spacing_x, spacing_y) {
 
-    coefficients_grid.initialize(0.0);
+    coefficients_grid.initialize(init);
 }
 
 void ThermalConductivity::updateCoefficients(const Grid& new_coefficients) {
@@ -44,11 +44,11 @@ ThermalConductivity::ThermalConductivity(const ThermalConductivity& other)
 }
 
 
-double ThermalConductivity::evaluate(double new_x, double new_y) {
+double ThermalConductivity::evaluate(int ind_x, int ind_y, double spacing_x, double spacing_y, double half_step_x, double half_step_y) {
     if (is_direct) {
         try {
-            x = new_x;
-            y = new_y;
+            x = ind_x * spacing_x + half_step_x;
+            y = ind_y * spacing_y + half_step_y;
             parser.DefineVar("x", &x);
             parser.DefineVar("y", &y);
             return parser.Eval();
@@ -57,9 +57,11 @@ double ThermalConductivity::evaluate(double new_x, double new_y) {
             throw;
         }
     } else if (is_inverse) {
-        int i = static_cast<int>(x / coefficients_grid.get_spacing_x());
-        int j = static_cast<int>(y / coefficients_grid.get_spacing_y());
-        return coefficients_grid.get_value(i, j);
+        int i = ind_x;
+        int j = ind_y;
+        int i_2 = i + static_cast<int>(2 * half_step_x / spacing_x);
+        int j_2 = j + static_cast<int>(2 * half_step_y / spacing_y);
+        return (coefficients_grid.get_value(i, j) + coefficients_grid.get_value(i_2, j_2)) / 2;
     } else {
         throw std::runtime_error("Invalid task type in ThermalConductivity.");
     }

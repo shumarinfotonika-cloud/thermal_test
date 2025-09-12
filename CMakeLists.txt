@@ -17,6 +17,7 @@ set(SOURCES
     src/SourceFunction.cpp
     src/ThermalConductivity.cpp
     src/Solver.cpp
+    src/SingleStepInverseSolver.cpp
     src/TempSaver.cpp
     src/ExactSolution.cpp)
 

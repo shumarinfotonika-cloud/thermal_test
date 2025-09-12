@@ -14,7 +14,7 @@ public:
 
     DirectSolver(const ConfigReader& config, const ThermalConductivity& new_coeffs);
 
-    void solve();
+    Grid solve();
 };
 
 #endif // DIRECT_SOLVER_H

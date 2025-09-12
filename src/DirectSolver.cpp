@@ -14,9 +14,10 @@ DirectSolver::DirectSolver(const ConfigReader& config)
 DirectSolver::DirectSolver(const ConfigReader& config, const ThermalConductivity& new_coeffs)
     : config(config), coeffs(new_coeffs) {}
 
-void DirectSolver::solve() {
+Grid DirectSolver::solve() {
 
     bool verbose = config.getString("", "verbose") == "true";
+    bool direct = config.getString("", "task_type") == "direct";
     std::string id = config.getString("", "id");
     double dt = config.getDouble("", "dt");
     int steps = config.getInt("", "steps");
@@ -73,7 +74,7 @@ void DirectSolver::solve() {
         }
     }
 
-    if (verbose) {
+    if (verbose && direct) {
         std::cout << "\nStarting simulation with ID: " << id << "\n\n";
 
         std::cout << "\t[Time]\n";
@@ -112,29 +113,31 @@ void DirectSolver::solve() {
     }
 
     for (int t = 0; t < steps; ++t) {
-        if (vtk_saver_active && (t % save_vtk_frequency == 0)) {
+        if (vtk_saver_active && (t % save_vtk_frequency == 0) && direct) {
             std::string new_path = ConfigReader::replacePlaceholder(vtk_path, "%g", id);
             new_path = ConfigReader::replacePlaceholder(new_path, "%s", std::to_string(t));
 
-            vtk_saver.saveTemperature("../" + new_path);
+            vtk_saver.saveTemperature("../" + new_path, "temperature");
 
-            if (verbose) {
+            if (verbose && direct) {
                 std::cout << "Step " << t << ": VTK saved to " << new_path << "\n";
             }
         }
 
-        if (txt_saver_active && (t % save_txt_frequency == 0)) {
+        if (txt_saver_active && (t % save_txt_frequency == 0) && direct) {
             std::string new_path = ConfigReader::replacePlaceholder(txt_path, "%g", id);
 
             txt_saver.save_step(t, "../" + new_path);
 
-            if (verbose) {
+            if (verbose && direct) {
                 std::cout << "Step " << t << ": Temp saved to " << new_path << "\n";
             }
         }
+        if (t == steps - 1) break;
         solver.solve_one_step(t);
     }
-    if (verbose) {
+    if (verbose && direct) {
         std::cout << "\nSimulation with ID " << id << " was completed successfully\n\n";
     }
+    return grid;
 }

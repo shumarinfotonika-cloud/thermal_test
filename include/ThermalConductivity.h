@@ -16,12 +16,13 @@ private:
 public:
     ThermalConductivity(const std::string &formula);
 
-    ThermalConductivity(int size_x, int size_y, double spacing_x, double spacing_y);
+    ThermalConductivity(int size_x, int size_y, double spacing_x, double spacing_y, double init);
 
     ThermalConductivity(const ThermalConductivity& other);
 
     void updateCoefficients(const Grid& new_coefficients);
-    double evaluate(double x, double y);
+    double evaluate(int ind_x, int ind_y, double spacing_x, double spacing_y, double half_step_x, double half_step_y);
+    Grid get_grid() {return coefficients_grid;}
 };
 
 #endif // THERMAL_CONDUCTIVITY_H

@@ -9,7 +9,7 @@ class VTKSaver {
 public:
     VTKSaver(const Grid &grid);
 
-    void saveTemperature(const std::string &filename);
+    void saveTemperature(const std::string &filename, const std::string &solve_name);
 
 private:
     const Grid &grid;

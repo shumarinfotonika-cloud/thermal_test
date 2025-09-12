@@ -30,8 +30,8 @@ void Solver::perform_x_step(double time) {
             double x = i * spacing_x;
             double y = j * grid.get_spacing_y();
 
-            double a_prev = thermal_conductivity.evaluate(x - spacing_x / 2, y);
-            double a_next = thermal_conductivity.evaluate(x + spacing_x / 2, y);
+            double a_prev = thermal_conductivity.evaluate(i, j, spacing_x, grid.get_spacing_y(), -spacing_x / 2, 0.0);
+            double a_next = thermal_conductivity.evaluate(i, j, spacing_x, grid.get_spacing_y(), spacing_x / 2, 0.0);
 
             double A = -dt * a_prev / (spacing_x * spacing_x);
             double B = 1 + dt * (a_prev + a_next) / (spacing_x * spacing_x);
@@ -66,8 +66,8 @@ void Solver::perform_y_step(double time) {
             double x = i * grid.get_spacing_x();
             double y = j * spacing_y;
 
-            double a_prev = thermal_conductivity.evaluate(x, y - spacing_y / 2);
-            double a_next = thermal_conductivity.evaluate(x, y + spacing_y / 2);
+            double a_prev = thermal_conductivity.evaluate(i, j, grid.get_spacing_x(), spacing_y, 0.0, -spacing_y / 2);
+            double a_next = thermal_conductivity.evaluate(i, j, grid.get_spacing_x(), spacing_y, 0.0, spacing_y / 2);
 
             double A = -dt * a_prev / (spacing_y * spacing_y);
             double B = 1 + dt * (a_prev + a_next) / (spacing_y * spacing_y);
